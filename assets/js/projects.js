@@ -8,7 +8,7 @@ var projects = [
     },
     {
       "name": "BossBabe",
-      "category": "Software Web",
+      "category": "Web App",
       "image": "assets/img/portfolio/bossbabe.jpg",
       "details": "https://github.com/MattManzi/BossBabe"
     }
