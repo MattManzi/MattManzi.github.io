@@ -18,6 +18,18 @@ I numeri sono **caricamenti di pagina, non persone uniche**. Ogni ricaricamento 
 
 ## Attivazione sul tuo account
 
+### Dal repository collegato a Cloudflare
+
+Il repository contiene anche un `wrangler.json` alla radice, che punta al Worker e ai file pubblici della cartella `cloudflare/`. Nelle impostazioni di compilazione puoi lasciare la directory radice `/`, nessun comando di compilazione e il comando di distribuzione `npx wrangler deploy`. La versione di Wrangler è fissata a 4.147.0 nel `package.json` della radice.
+
+Durante la prima pubblicazione Wrangler crea o collega automaticamente il database D1 `mattia-site-analytics` alla variabile `DB`. Lo schema iniziale viene preparato dal Worker alla prima richiesta alle statistiche, senza cancellare dati esistenti. Non serve eseguire SQL dal pannello per la prima attivazione.
+
+Nel Worker `mattiamanzi`, apri **Impostazioni → Variabili e segreti → Aggiungi**. Scegli il tipo **Segreto**, usa come nome esatto `ANALYTICS_ADMIN_PASSWORD` e come valore una password di almeno 16 caratteri. Salva e distribuisci la modifica. La password va inserita solo nel pannello Cloudflare.
+
+Attendi la riuscita della pubblicazione del nuovo commit, poi apri https://mattiamanzi.mattiamanzi.workers.dev/statistiche e usa la password scelta. Le visite precedenti alla pubblicazione e all’attivazione non sono recuperate da questo codice.
+
+### Dal pacchetto ZIP
+
 Serve Node.js 22.13 o successivo. Estrai il pacchetto e apri un terminale nella sua cartella, poi esegui:
 
 ```bash
@@ -25,9 +37,9 @@ npm install
 npm run setup
 ```
 
-La procedura apre l’accesso Cloudflare nel tuo browser, crea un database D1 in giurisdizione UE, applica lo schema, chiede una password riservata al pannello e pubblica sul Worker `mattiamanzi`. Usa l’account Cloudflare che gestisce l’indirizzo sopra. **Scegli una password di almeno 16 caratteri e non inserirla nel codice, nel repository o in chat.**
+La procedura apre l’accesso Cloudflare nel tuo browser, chiede una password riservata al pannello, pubblica sul Worker `mattiamanzi` e registra la migrazione iniziale. Durante la pubblicazione Wrangler crea o riutilizza il database D1 `mattia-site-analytics`. Usa l’account Cloudflare che gestisce l’indirizzo sopra. **Scegli una password di almeno 16 caratteri e non inserirla nel codice, nel repository o in chat.**
 
-Il progetto non contiene credenziali Cloudflare o password. La creazione del database aggiorna `wrangler.json` con il suo ID reale. Se possiedi già un database con lo stesso nome, collegalo alla variabile `DB` nel file di configurazione prima di continuare.
+Il progetto non contiene credenziali Cloudflare o password. Wrangler aggiorna `wrangler.json` con l’ID reale della risorsa dopo la creazione; il collegamento viene mantenuto anche nelle pubblicazioni CI successive senza un ID specifico dell’account nel repository. Se vuoi utilizzare un database diverso da `mattia-site-analytics`, modifica la configurazione prima di pubblicare.
 
 Il pacchetto comprende il portfolio attuale e le sue immagini. Un semplice caricamento dei soli file statici non attiva il backend: va pubblicato anche il Worker con il binding `DB` e il secret `ANALYTICS_ADMIN_PASSWORD`. Il nome Worker è già quello del tuo sito e la pubblicazione ne sostituisce la versione corrente.
 
@@ -41,13 +53,12 @@ Inserisci la password scelta. Visita il portfolio da un altro browser non esclus
 
 ```bash
 npx wrangler login
-npx wrangler d1 create mattia-site-analytics --binding DB --update-config --jurisdiction eu
-npx wrangler d1 migrations apply DB --remote
 npx wrangler secret put ANALYTICS_ADMIN_PASSWORD
 npx wrangler deploy
+npx wrangler d1 migrations apply DB --remote
 ```
 
-La creazione del database è richiesta solo la prima volta. Per gli aggiornamenti successivi usa `npm run deploy`. Le migrazioni successive vanno applicate prima di pubblicare.
+La creazione del database è automatica la prima volta. Per gli aggiornamenti successivi usa `npm run deploy`. Questa inizializzazione automatica riguarda solo lo schema iniziale; eventuali migrazioni future vanno gestite prima di pubblicare le modifiche che le richiedono.
 
 ## Misurazione e accesso
 
@@ -74,6 +85,7 @@ I test usano SQLite reale e un adattatore D1 locale, senza credenziali o conness
 - `src/dashboard.js`: HTML della dashboard, servito solo dopo il login.
 - `src/worker.js`: instradamento e API protette.
 - `src/auth.js`: sessioni, password e limitazione dei tentativi.
+- `src/database.js`: preparazione dello schema iniziale senza modificare i conteggi esistenti.
 - `src/analytics.js`: raccolta e aggregazione.
 - `migrations/`: schema del database.
 - `scripts/setup.mjs`: prima attivazione.
@@ -86,3 +98,5 @@ Documentazione ufficiale di riferimento:
 - https://developers.cloudflare.com/d1/wrangler-commands/
 - https://developers.cloudflare.com/d1/worker-api/prepared-statements/
 - https://developers.cloudflare.com/workers/versions-and-deployments/version-urls/
+- https://developers.cloudflare.com/changelog/post/2025-10-24-automatic-resource-provisioning/
+- https://developers.cloudflare.com/workers/configuration/secrets/

@@ -4,6 +4,9 @@
   "compatibility_date": "2026-10-06",
   "workers_dev": true,
   "keep_vars": true,
+  "d1_databases": [
+    {"binding":"DB","database_name":"mattia-site-analytics","migrations_dir":"migrations"}
+  ],
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",

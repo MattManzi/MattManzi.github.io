@@ -2,6 +2,7 @@ import {configured,authenticated,newSession,sessionCookie,clearCookie,sameOrigin
 import {ignored,cleanEvent,record,makeRange,report,toCSV} from './analytics.js';
 import {loginPage} from './login.js';
 import {dashboardPage} from './dashboard.js';
+import {ensureSchema} from './database.js';
 
 const PRIVATE_HEADERS = {
   'Cache-Control':'no-store', 'Vary':'Cookie',
@@ -37,6 +38,7 @@ export default {
     if (!isPanel && !isAPI) return env.ASSETS.fetch(request);
     try {
       const ready=configured(env);
+      if (ready) await ensureSchema(env.DB);
       if (isPanel) {
         if (!['GET','HEAD'].includes(request.method)) return json({error:'Metodo non consentito.'},405);
         if (!ready || !await authenticated(request,env)) return new Response(request.method==='HEAD'?null:loginPage(ready),{status:ready?200:503,headers:{...PRIVATE_HEADERS,'Content-Type':'text/html; charset=utf-8'}});

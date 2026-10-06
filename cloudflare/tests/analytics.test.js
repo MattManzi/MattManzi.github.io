@@ -12,9 +12,9 @@ const mobile='Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit
 // Test fixture only; this is not a production password.
 const password='fixture-only-password-for-tests';
 const now=Date.parse('2026-10-06T12:00:00Z');
-function database() {
+function database({initialize=true}={}) {
   const sql=new DatabaseSync(':memory:');
-  sql.exec(readFileSync(new URL('../migrations/0001_analytics.sql',import.meta.url),'utf8'));
+  if(initialize)sql.exec(readFileSync(new URL('../migrations/0001_analytics.sql',import.meta.url),'utf8'));
   const db={
     prepare(query){let values=[];return {bind(...v){values=v;return this;},async all(){return {results:sql.prepare(query).all(...values)};},execute(){return {results:sql.prepare(query).all(...values)};}};},
     async batch(statements){sql.exec('BEGIN');try{const results=statements.map(s=>s.execute());sql.exec('COMMIT');return results;}catch(e){sql.exec('ROLLBACK');throw e;}}
@@ -40,6 +40,18 @@ test('conteggi aggregati, duplicati e filtri usano SQLite reale',async()=>{
   assert.equal(full.daily.length,7);assert.equal(full.daily.at(-1).pageviews,2);
   const filtered=await report(db,makeRange(new URLSearchParams('days=7&country=IT&device=mobile'),now));
   assert.equal(filtered.summary.pageviews,1);assert.equal(filtered.summary.contactClicks,1);assert.deepEqual(filtered.availableCountries.sort(),['IT','MT']);
+});
+test('un database appena creato si prepara automaticamente senza azzerare i conteggi',async()=>{
+  const {env,sql}=database({initialize:false});
+  const cookie=await login(env);
+  assert.equal((await worker.fetch(request('/api/analytics/collect',{body:event()}),env)).status,204);
+  let response=await worker.fetch(request('/api/analytics/stats',{headers:{Cookie:cookie}}),env);
+  assert.equal((await response.json()).summary.pageviews,1);
+  // A new binding object simulates a fresh Worker isolate using the same DB.
+  const nextEnv={...env,DB:{...env.DB}};
+  response=await worker.fetch(request('/api/analytics/stats',{headers:{Cookie:cookie}}),nextEnv);
+  assert.equal((await response.json()).summary.pageviews,1);
+  assert.equal(sql.prepare('SELECT SUM(count) AS n FROM analytics_counts').get().n,1);
 });
 test('lo stesso ID non può cambiare evento né aggiungere conteggi',async()=>{
   const {db}=database();const first=event();await add(db,first);await add(db,{...first,metric:'phone'});
