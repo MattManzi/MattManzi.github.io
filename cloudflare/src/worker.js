@@ -1,4 +1,4 @@
-import {configured,authenticated,newSession,sessionCookie,clearCookie,sameOrigin,safeEqual,rateAllowed} from './auth.js';
+import {configurationIssues,authenticated,newSession,sessionCookie,clearCookie,sameOrigin,safeEqual,rateAllowed} from './auth.js';
 import {ignored,cleanEvent,record,makeRange,report,toCSV} from './analytics.js';
 import {loginPage} from './login.js';
 import {dashboardPage} from './dashboard.js';
@@ -37,11 +37,11 @@ export default {
     const isAPI=path.startsWith('/api/analytics/');
     if (!isPanel && !isAPI) return env.ASSETS.fetch(request);
     try {
-      const ready=configured(env);
+      const issues=configurationIssues(env),ready=issues.length===0;
       if (ready) await ensureSchema(env.DB);
       if (isPanel) {
         if (!['GET','HEAD'].includes(request.method)) return json({error:'Metodo non consentito.'},405);
-        if (!ready || !await authenticated(request,env)) return new Response(request.method==='HEAD'?null:loginPage(ready),{status:ready?200:503,headers:{...PRIVATE_HEADERS,'Content-Type':'text/html; charset=utf-8'}});
+        if (!ready || !await authenticated(request,env)) return new Response(request.method==='HEAD'?null:loginPage(ready,issues),{status:ready?200:503,headers:{...PRIVATE_HEADERS,'Content-Type':'text/html; charset=utf-8'}});
         return new Response(request.method==='HEAD'?null:dashboardPage,{headers:{...PRIVATE_HEADERS,'Content-Type':'text/html; charset=utf-8'}});
       }
       if (!ready) return json({error:'La raccolta delle statistiche non è ancora attiva.'},503);

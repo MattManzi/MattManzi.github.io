@@ -113,6 +113,21 @@ test('dati non configurati non vengono simulati con zeri',async()=>{
   assert.match(await (await worker.fetch(request('/statistiche'),env)).text(),/non è ancora attivo/);
   assert.equal(await (await worker.fetch(request('/'),env)).text(),'Portfolio');
 });
+test('il pannello indica il requisito mancante senza mostrare password o statistiche',async()=>{
+  for(const [change,expected] of [
+    [env=>{delete env.DB;},/database delle statistiche non è collegato/],
+    [env=>{env.DB='text is not a D1 binding';},/database delle statistiche non è collegato/],
+    [env=>{delete env.ANALYTICS_ADMIN_PASSWORD;},/password non è presente/],
+    [env=>{env.ANALYTICS_ADMIN_PASSWORD='short-fixture';},/password impostata è troppo corta/]
+  ]){
+    const {env}=database();change(env);
+    const response=await worker.fetch(request('/statistiche'),env);
+    assert.equal(response.status,503);
+    const html=await response.text();assert.match(html,expected);
+    assert.doesNotMatch(html,/login-form|id="kpi-views"|fixture-only-password|short-fixture/);
+    assert.match(response.headers.get('Cache-Control'),/no-store/);
+  }
+});
 test('date italiane, dispositivi, browser e provenienze',()=>{
   assert.equal(dayInRome(Date.parse('2026-10-05T22:30:00Z')),'2026-10-06');
   assert.equal(makeRange(new URLSearchParams('days=7'),Date.parse('2026-10-25T03:00:00Z')).start,'2026-10-19');

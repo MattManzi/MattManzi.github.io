@@ -16,8 +16,15 @@ export async function safeEqual(left, right) {
   for (let i=0; i<a.length; i++) mismatch |= a[i] ^ b[i];
   return mismatch === 0;
 }
+export function configurationIssues(env) {
+  const issues=[];
+  if(typeof env.DB?.prepare!=='function'||typeof env.DB?.batch!=='function')issues.push('database_missing');
+  if(typeof env.ANALYTICS_ADMIN_PASSWORD!=='string'||!env.ANALYTICS_ADMIN_PASSWORD.length)issues.push('password_missing');
+  else if(env.ANALYTICS_ADMIN_PASSWORD.length<16)issues.push('password_short');
+  return issues;
+}
 export function configured(env) {
-  return Boolean(env.DB && typeof env.ANALYTICS_ADMIN_PASSWORD === 'string' && env.ANALYTICS_ADMIN_PASSWORD.length >= 16);
+  return configurationIssues(env).length===0;
 }
 export async function newSession(secret, now = Date.now()) {
   const payload = `${Math.floor(now/1000) + SESSION_SECONDS}.${crypto.randomUUID()}`;
