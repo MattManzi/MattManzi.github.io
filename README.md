@@ -36,6 +36,6 @@ I file statici nella radice restano utilizzabili su GitHub Pages. La dashboard c
 
 ## Contatti
 
-- Email: mat.manzi.97@gmail.com
-- Telefono e WhatsApp: +39 392 002 5363
+- Contatto principale: [WhatsApp](https://wa.me/393920025363), +39 392 002 5363. I pulsanti del sito aprono una conversazione con un messaggio iniziale pertinente.
+- Email alternativa: mattia.manzi97@gmail.com, disponibile nella sezione contatti e nel pulsante Copia email.
 - GitHub: https://github.com/MattManzi

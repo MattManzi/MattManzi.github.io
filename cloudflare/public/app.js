@@ -34,7 +34,7 @@ dialog.addEventListener('click', event => {
 document.querySelector('#copy-email').addEventListener('click', async () => {
   const status = document.querySelector('#copy-status');
   try {
-    await navigator.clipboard.writeText('mat.manzi.97@gmail.com');
+    await navigator.clipboard.writeText('mattia.manzi97@gmail.com');
     status.textContent = 'Email copiata.';
   } catch {
     status.textContent = 'Seleziona e copia l’indirizzo qui sopra.';
