@@ -1,0 +1,30 @@
+MATTIA MANZI — PORTFOLIO E STATISTICHE
+
+Pacchetto completo del codice, corrispondente al commit 6d89977e278c60a3719b30cdb807b54036ebebe3 di MattManzi/MattManzi.github.io.
+
+CONTENUTO
+- Portfolio completo e immagini: cloudflare/public/.
+- Dashboard privata, raccolta dati e accesso protetto: cloudflare/src/.
+- Schema del database: cloudflare/migrations/.
+- Configurazione Cloudflare e dipendenze: wrangler.json, package.json, package-lock.json.
+- File statici alla radice per la versione GitHub Pages.
+- Istruzioni dettagliate: README.md e cloudflare/README.md.
+
+PUBBLICAZIONE DEL PROGETTO COMPLETO
+Apri un terminale nella cartella che contiene wrangler.json e package.json. Con Node.js 22.13 o successivo installato:
+
+npm ci
+npx wrangler login
+npx wrangler secret put ANALYTICS_ADMIN_PASSWORD
+npm run deploy
+
+Inserisci la password soltanto quando Wrangler la chiede: almeno 16 caratteri. In alternativa, configurala come Segreto in Produzione > Impostazioni > Variabili e segreti del Worker Cloudflare, con il nome esatto ANALYTICS_ADMIN_PASSWORD.
+
+Durante il deploy Wrangler crea o collega il database D1. Il Worker prepara lo schema iniziale senza azzerare i conteggi esistenti.
+
+Portfolio: https://mattiamanzi.mattiamanzi.workers.dev/
+Statistiche: https://mattiamanzi.mattiamanzi.workers.dev/statistiche
+
+Per vedere solo il portfolio offline puoi aprire cloudflare/public/index.html. La pagina delle statistiche richiede il Worker e il database: un caricamento dei soli file HTML/CSS non attiva la raccolta.
+
+Il pacchetto contiene il codice e lo schema; le password e gli eventuali dati raccolti nel tuo database Cloudflare restano nel tuo account e non sono inclusi nello ZIP.
